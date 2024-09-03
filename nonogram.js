@@ -166,98 +166,74 @@ class Board
     }
 
     build() {
+        document.documentElement.style.setProperty('--grid-size', this.size);
         $("#livesCounter").html("❤️".repeat(this.lives));
-        var t = $("<table/>", {
-            //  fixing the focus conflict when switching between m/kb
-            mouseout: () => {
-                let id = document.activeElement.id;
-                board.keyboardHandler.posx = parseInt(id[0]);
-                board.keyboardHandler.posy = parseInt(id[2]);
-            }
+        
+        const container = $("<div/>", {
+            class: "grid grid-cols-[auto_repeat(var(--grid-size),2rem)] grid-rows-[auto_repeat(var(--grid-size),2rem)] gap-px p-2"
         });
-
-        for (var y = -1; y < this.size; y++)
-        {
-            var tr = $("<tr/>");
-            
-            for (var x = -1; x < this.size; x++)
-            {
-                var td = $("<td/>");
-
-                // upper left corner
-                if (y == -1 && x == -1) {
-                    tr.append(td);
-                    continue;
-                }
-
-                if (y == -1 && x != -1) {
-                    // write col hints
-                    
-                    var hintlist = "";
-                    var p = $("<p/>", {"class": "verticalHints"});
-
-                    for (var i = 0; i < this.indicators[0][x].length; i++) {
-                        hintlist += this.indicators[0][x][i] + "<br/>";
-                    }
-                    p.html(hintlist);
-                    td.append(p);
-                }
-                else if (x == -1)
-                {
-                    // write row hints
-                    var hintlist = "";
-                    var p = $("<p/>");
-
-                    for (var i = 0; i < this.indicators[1][y].length; i++) {
-                        hintlist += this.indicators[1][y][i] + " ";
-                    }
-                    p.html(hintlist);
-                    td.append(p);
-                }
-                else {
-                    var btn = $("<button/>", {
-                        "class": "shadow tile btn btn-default",
-                        id: x+"_"+y,
-                        text: " ",
-
-                        // event.target on event https://stackoverflow.com/a/13252233
-                        click: (e) => {
-                            let eid = e.target.id;
-                            let _x = parseInt(eid[0]);
-                            let _y = parseInt(eid[2]);
-
-                            board.reveal(_x, _y);
-                        },
-                        contextmenu: (e) => {
-                            e.preventDefault();
-                            board.isCommenting = true;
-
-                            let eid = e.target.id;
-                            let _posx = parseInt(eid[0]);
-                            let _posy = parseInt(eid[2]);
-                            
-                            board.reveal(_posx, _posy, false);
-                            board.isCommenting = false;
-                        },
-                        mouseenter: (e) => {
-                            let eid = e.target.id;
-                            let _x = parseInt(eid[0]);
-                            let _y = parseInt(eid[2]);
-
-                            board.keyboardHandler.posx = _x;
-                            board.keyboardHandler.posy = _y;
-                            $(_x + "_" + _y).focus();
-                        }
-                    });
-
-                    td.append(btn);
-                }
-                tr.append(td);
-            }
-            t.append(tr);
+        
+        // Create vertical hints
+        const verticalHints = $("<div/>", {
+            class: "col-start-2 col-span-full row-start-1 grid grid-cols-[repeat(var(--grid-size),1fr)]"
+        });
+        for (let x = 0; x < this.size; x++) {
+            verticalHints.append(this._createHintElement(this.indicators[0][x], "vertical-hint"));
         }
-        $("#board").append(t);
+        container.append(verticalHints);
+    
+        // Create horizontal hints
+        const horizontalHints = $("<div/>", {
+            class: "col-start-1 row-start-2 row-span-full grid grid-rows-[repeat(var(--grid-size),1fr)]"
+        });
+        for (let y = 0; y < this.size; y++) {
+            horizontalHints.append(this._createHintElement(this.indicators[1][y], "horizontal-hint"));
+        }
+        container.append(horizontalHints);
+    
+        // Create the grid
+        const grid = $("<div/>", {
+            class: "col-start-2 col-span-full row-start-2 row-span-full grid grid-cols-[repeat(var(--grid-size),1fr)] grid-rows-[repeat(var(--grid-size),1fr)] gap-px"
+        });
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
+                const cell = $("<button/>", {
+                    class: "w-full h-full flex justify-center items-center border border-gray-300 bg-white shadow",
+                    id: x + "_" + y,
+                    text: " ",
+                    click: (event) => {
+                        const [x, y] = event.target.id.split("_").map(Number);
+                        this.reveal(x, y);
+                    },
+                    contextmenu: (event) => {
+                        event.preventDefault();
+                        this.isCommenting = true;
+                        const [x, y] = event.target.id.split("_").map(Number);
+                        this.reveal(x, y, false);
+                        this.isCommenting = false;
+                    },
+                    mouseenter: (event) => {
+                        const [x, y] = event.target.id.split("_").map(Number);
+                        this.keyboardHandler.posx = x;
+                        this.keyboardHandler.posy = y;
+                        $("#" + x + "_" + y).focus();
+                    }
+                });
+                grid.append(cell);
+            }
+        }
+        container.append(grid);
+    
+        $("#board").append(container);
     }
+    
+    _createHintElement(hints, className) {
+        return $("<div/>", {
+            class: `${className} flex justify-center items-center p-px`,
+            html: hints.map(hint => `<span class="text-xs leading-none m-px">${hint}</span>`).join("")
+        });
+    }
+
 
     reveal(x, y, _isFilling=false) {
         if (this.lives == 0)
