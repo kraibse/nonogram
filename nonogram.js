@@ -167,6 +167,7 @@ class Board
 
     build() {
         $("#livesCounter").html("❤️".repeat(this.lives));
+
         var t = $("<table/>", {
             //  fixing the focus conflict when switching between m/kb
             mouseout: () => {
@@ -180,12 +181,12 @@ class Board
         {
             var tr = $("<tr/>");
             
-            for (var x = -1; x < this.size; x++)
+            for (var x = -1; x < this.size + 1; x++)
             {
                 var td = $("<td/>");
 
                 // upper left corner
-                if (y == -1 && x == -1) {
+                if ((y == -1 && x == -1) || (x == this.size)) {
                     tr.append(td);
                     continue;
                 }
