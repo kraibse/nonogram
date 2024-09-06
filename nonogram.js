@@ -184,6 +184,11 @@ class Board
             for (var x = -1; x < this.size + 1; x++)
             {
                 var td = $("<td/>");
+                
+                const isSideColumn = (x == -1 || x == this.size); 
+                if (isSideColumn) {
+                    td.addClass("side-column");
+                }
 
                 // upper left corner
                 if ((y == -1 && x == -1) || (x == this.size)) {
