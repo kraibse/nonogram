@@ -1,6 +1,10 @@
 :root {
     --grid-size: 10;
     --cell-size: 46px;
+
+    /* --flagged-tile-bg: #ffbe70; */
+    --flagged-tile-bg: #ff726f;
+    --bomb-tile-bg: #333;
 }
 
 @media (max-width: 600px) {
@@ -43,6 +47,29 @@ body
     /* transform: scale(1.1); */
     outline: 2px solid #fff;
     border-radius: 0.125em;
+}
+
+.tile i {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.comment-tile {
+    color: var(--bomb-tile-bg);
+    background-color: #bbb;
+}
+
+.bomb-tile {
+    color: var(--bomb-tile-bg);
+    background-color: var(--flagged-tile-bg);
+}
+
+.flagged-tile {
+    color: var(--bomb-tile-bg);
+    background-color: var(--flagged-tile-bg) !important;
 }
 
 .side-column {
@@ -107,58 +134,7 @@ body
 
 }
 
-#postgameMessage
-{
-    display: none;
-    height: 100%;
-
-    text-align: center;
-    font-size: 32px;
-    margin: auto;
-}
-
 .verticalHints
 {
     text-align: center;
-}
-
-
-#board table {
-    margin: auto;
-    padding-right: 56px;
-    /* position: relative; */
-    left: -22px;
-}
-
-#instructions {
-    background-color: #424242;
-}
-
-#instructions table {
-    border-collapse: separate;
-    border-spacing: 8px;
-}
-
-#instructions thead td {
-    background-color: #222;
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-#instructions tr {
-    background-color: #515151 !important;
-}
-
-#instructions td {
-    padding: 8px 16px;
-    background-color: #626262;
-    border-radius: 0.25em;
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-}
-
-#livesCounter {
-    /* background-color: white; */
-    max-width: 60px !important;
-    letter-spacing: 0.2em;
-    /* font-size: 26px; */
 }

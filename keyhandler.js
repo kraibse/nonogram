@@ -107,6 +107,8 @@ class KeyboardHandler {
     }
 
     focus(x, y) {
+        this.posx = x;
+        this.posy = y;
         $("#" + x + "_" + y).focus();
     }
 }

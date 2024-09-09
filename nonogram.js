@@ -1,9 +1,13 @@
 const FLAG_TILE_TEXT = '<i class="fa-solid fa-flag"></i>';
 
 const FLAG_TILE = document.createElement('i');
-FLAG_TILE.classList.add('fa-solid', 'fa-flag', 'text-dark');
+FLAG_TILE.setAttribute('class', 'fa-solid fa-flag text-dark flagged-tile');
 
-const FLAG_TILE_BG = "#ffbe70";
+const FLAG_TILE_BG = "#f47d7b";
+
+const BOMB = 0;
+const FREE = 1;
+const MARKED = 2;
 
 
 class Board
@@ -15,10 +19,6 @@ class Board
 
         this.reset();
         
-        this._generateGrid();
-        this._generateIndicators();
-        
-        $("#0_0").focus();
         this.livesCounter = document.getElementById('livesCounter');
 
         this.keyboardHandler = new KeyboardHandler(this);
@@ -72,8 +72,9 @@ class Board
                     this.reveal(i, y, false);
                 }
                 if (tileH.innerHTML == "?") {
-                    tileH.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
-                    tileH.appendChild(FLAG_TILE);
+                    // tileH.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
+                    tileH.innerHTML = "";
+                    tileH.appendChild(FLAG_TILE.cloneNode());
                     // tileH.innerHTML = "!";
                     // tileH.setAttribute('style', 'background-color: #333; color: #bbb;');
                 }
@@ -83,8 +84,9 @@ class Board
                     this.reveal(x, i, false);
                 }
                 if (tileV.innerHTML == "?") {
-                    tileV.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
-                    tileV.appendChild(FLAG_TILE);
+                    // tileV.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
+                    tileV.innerHTML = "";
+                    tileV.appendChild(FLAG_TILE.cloneNode());
                     // tileV.innerHTML = "!";
                     // tileV.setAttribute('style', 'background-color: #333; color: #bbb;');
                 }
@@ -98,7 +100,7 @@ class Board
     
     _generateGrid(_size=this.size) {
         // Returns an two-dimensional array directly proportional to _size
-        console.log("Randomizing grid");
+        // console.log("Randomizing grid");
         for (var y=0; y < _size; y++)
         {
             this.grid.push([]);
@@ -113,12 +115,12 @@ class Board
                 if (r == 1) { this.totalPoints++; }
             }
         }
-        console.log(this.grid);
+        // console.log(this.grid);
     }
     
     _generateIndicators() {
         // Generates a two-dimensional array containing the lenghts of non-bomb tiles
-        console.log("Generating indicators");
+        // console.log("Generating indicators");
         for (var i = 0; i < this.size; i++)
         {
             // filter out lengths from non-bomb tiles from row array
@@ -139,7 +141,7 @@ class Board
             this.indicators[1].push(row);
         }
 
-        console.log(this.indicators);
+        // console.log(this.indicators);
     }
 
     _getColumn(_x, map) {
@@ -204,9 +206,11 @@ class Board
                 // Add keydown event listener for Enter key
                 cell.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
+                        e.preventDefault();
                         this.handleCellClick(e, x, y);
                     }
                     if (e.key === 'Space') {
+                        e.preventDefault();
                         this.handleCellRightClick(e, x, y);
                     }
                 });
@@ -231,7 +235,7 @@ class Board
         livesCounter.innerHTML = '';
 
         const heartIcon = document.createElement('i');
-        heartIcon.classList.add('fa-solid', 'fa-heart', 'px-1');
+        heartIcon.classList.add('fa-solid', 'fa-heart', 'px-1', 'text-end');
 
         for (let i = 0; i < this.lives; i++) {
             livesCounter.appendChild(heartIcon.cloneNode());
@@ -239,15 +243,17 @@ class Board
     }
 
     handleCellClick(e, x, y) {
-        console.log(`Cell clicked: ${x}, ${y}`);
+        // console.log(`Cell clicked: ${x}, ${y}`);
         // Implement your reveal logic here
+        this.keyboardHandler.focus(x, y);
         this.reveal(x, y);
     }
 
     handleCellRightClick(e, x, y) {
         e.preventDefault();
-        console.log(`Cell right-clicked: ${x}, ${y}`);
+        // console.log(`Cell right-clicked: ${x}, ${y}`);
         // Implement your comment logic here
+        this.keyboardHandler.focus(x, y);
 
         this.isCommenting = true;
         this.isUserCommenting = true;
@@ -259,6 +265,7 @@ class Board
     handleCellHover(x, y) {
         // console.log(`Cell hovered: ${x}, ${y}`);
         // Implement your hover logic here
+        this.keyboardHandler.focus(x, y);
     }
 
     reset() {
@@ -275,9 +282,7 @@ class Board
         this._generateIndicators();
     }
 
-    reveal(x, y, _isFilling = false) {
-        if (this.isGameOver()) return;
-    
+    reveal(x, y, _isFilling = false) {   
         const tile = document.getElementById(`${x}_${y}`);
         if (this.isTileAlreadyRevealed(tile)) return;
     
@@ -293,6 +298,7 @@ class Board
     
         this.updateTileAppearance(tile, content, color, backgroundColor);
         this.checkGameStatus();
+        if (this.isGameOver()) return;
     
         if (!_isFilling) {
             this.revealAdjacentTiles(x, y, this.isCommenting);
@@ -310,7 +316,7 @@ class Board
     
     handleNormalReveal(x, y) {
         const content = this.grid[y][x].toString();
-        console.log("Found content: ", content);
+        // console.log("Found content: ", content);
     
         if (content === '0') {
             return this.handleBombReveal(x, y);
@@ -324,8 +330,8 @@ class Board
         this.updateLivesCounter();
         this.revealedTiles[y][x] = -1;
         const bombTile = document.createElement('i');
-        bombTile.classList.add('fa-solid', 'fa-bomb', 'text-dark');
-        return { content: bombTile, color: '#ff726f', backgroundColor: '#ff726f' };
+        bombTile.classList.add('fa-solid', 'fa-bomb');
+        return { content: bombTile, color: FLAG_TILE_BG, backgroundColor: '#333' };
     }
     
     handleCorrectReveal(x, y) {
@@ -346,9 +352,7 @@ class Board
         } else if (this.isUnmarkedTile(tile)) {
             this.revealedTiles[y][x] = 2;
             if (commentSymbol === '!') {
-                const flagTile = document.createElement('i');
-                flagTile.classList.add('fa-solid', 'fa-flag', 'text-dark');
-                return { content: flagTile, color: '#333', backgroundColor: FLAG_TILE_BG };
+                return { content: FLAG_TILE.cloneNode(), color: '#333', backgroundColor: FLAG_TILE_BG };
             }
             return { content: commentSymbol, color: '#333', backgroundColor: '#bbb' };
         } else {
@@ -358,13 +362,13 @@ class Board
     
     isCommentTile(tile, commentSymbol) {
         const isComment = tile.innerHTML === commentSymbol;
-        console.log("Is comment: ", isComment);
+        // console.log("Is comment: ", isComment);
         return isComment;
     }
     
     isUnmarkedTile(tile) {
         const innerHTML = tile.innerHTML.trim();
-        console.log("Is unmarked tile: ", innerHTML === '');
+        // console.log("Is unmarked tile: ", innerHTML === '');
         return innerHTML === '';
     }
     
@@ -380,18 +384,12 @@ class Board
     }
     
     checkGameStatus() {
+        // console.log(this.points, this.totalPoints);
+
         if (this.points === this.totalPoints) {
-            this.displayPostgameMessage("YOU WON!!", "#0f0");
+            showWinMessage();
         } else if (this.lives === 0) {
-            this.displayPostgameMessage("GAME OVER", "rgb(255, 204, 36)");
+            showLoseMessage();
         }
     }
-    
-    displayPostgameMessage(message, color) {
-        const pgm = document.getElementById("postgameMessage");
-        pgm.innerHTML = message;
-        pgm.style.display = "block";
-        pgm.style.color = color;
-    }
 }
-
