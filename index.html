@@ -98,20 +98,20 @@
 
       <div class="flex flex-col flex-grow justify-center pb-4 items-center align-center">
         <div
-          class="lg:w-[800px] w-full p-4 flex row justify-between mb-5"
+          class="lg:w-[800px] w-full p-4 flex flex-row md:flex-row justify-between mb-5"
         >
           <button
             id="howToPlayButton"
-            class="w-full text-lg text-center px-4 mr-2 py-1.5 rounded bg-secondary text-dark"
+            class="w-full text-lg text-center md:px-4 px-2 mr-2 py-1.5 rounded bg-secondary text-dark"
           >
-            <i class="fa-solid fa-question-circle mr-4"></i>How to play
+            <i class="fa-solid fa-question-circle md:mr-4 mr-2"></i>How to play
           </button>
 
           <button
-            class="w-full text-lg text-center px-4 ml-2 py-1.5 rounded bg-secondary text-dark"
+            class="w-full text-lg text-center md:px-4 px-2 ml-2 py-1.5 rounded bg-secondary text-dark"
             onclick="regenerateBoard()"
           >
-            <i class="fa-solid fa-arrow-rotate-left mr-4"></i>New game
+            <i class="fa-solid fa-arrow-rotate-left md:mr-4 mr-2"></i>New game
           </button>
         </div>
       </div>
@@ -163,9 +163,9 @@
                 <br>
 
                 <div class="w-full text-start">
-                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">LMB</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Enter</span> to reveal the selected tile</p>
-                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">RMB</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Space</span> to set a marker on the selected tile</p>
-                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Arrows</span> or <i class="fa-solid fa-hand-pointer bg-gray-300 text-gray-700 p-1 rounded-md"></i> to navigate and select tiles in the grid</p>
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">LMB</span>, <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Enter</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md"><i class="fa-solid fa-hand-pointer"></i>(tap)</span> to reveal the selected tile</p>
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">RMB</span>, <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Space</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md"><i class="fa-solid fa-hand-pointer"></i>(long hold)</span> to set a marker on the selected tile</p>
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Arrows</span> to navigate and select tiles in the grid</p>
                 </div>
             `,
 

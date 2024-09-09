@@ -9,7 +9,7 @@
 
 @media (max-width: 600px) {
     :root {
-        --cell-size: 30px;
+        --cell-size: min(7vw, 7vh);
     }
 }
 
