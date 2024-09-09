@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
 
     <link rel="icon" href="/images/favicon.png" />
-    <title>Nonogrid</title>
+    <title>Nonogram - kraibse.github.io</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -20,9 +20,11 @@
           extend: {
             colors: {
               primary: "#4b1a93",
+              secondary: "#ffd770",
               cta: "#a89050",
               ctahover: "#c2a253",
               dark: "#161718",
+              catmauve: "#cba6f7",
             },
             text: {
               primary: "#4b1a93",
@@ -45,10 +47,16 @@
     <script>
       var board = new Board(10);
     </script>
+
+        <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.6/dist/sweetalert2.min.css"
+        />
+      <!-- <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-borderless@4/borderless.css" rel="stylesheet"> -->
   </head>
 
   <body class="">
-    <div class="flex flex-col h-screen bg-primary/20">
+    <div class="flex flex-col justify-center h-screen bg-primary/20">
       <!-- menubar -->
       <div
         id="menubar"
@@ -67,91 +75,47 @@
           <div class="flex flex-col justify-center">
             <a
               id="github-link"
-              href="https://github.com/kraibse/kraibse.github.io/issues"
+              href="https://github.com/kraibse/nonogram"
               target="_blank"
               rel="noopener"
               class="text-2xl"
             >
               <i class="fa-brands fa-github"></i>
             </a>
-
-        </div>
-    </div>
-</div>
-    <p class="mx-auto py-2 text-lg">
-    <span id="livesCounter" class="text-red-500"></span>
-    </p>
-
-      <div class="flex flex-grow mx-auto w-screen text-center align-center pr-4 pl-2">
-        <div id="postgameMessage"></div>
-        <div class="mx-auto">
-          <div id="board" class=""></div>
-        </div>
-
-        <div id="menu" class="d-flex flex-col">
-          <div id="gridSlider"></div>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-col flex-grow w-full justify-center">
-        <div class="max-w-[800px] flex justify-between mb-5 px-4 gap-x-4 mx-auto">
-          <button class="w-full min-w-[50%] mx-4 text-xl mx-auto text-center px-4 py-1.5 rounded-xl bg-primary">
+      <div
+        class="flex flex-grow mx-auto w-screen text-center items-center justify-center align-center pr-4 pl-2"
+      >
+          <div id="board" class=""></div>
+      </div>
+
+      <p class="flex flex-grow items-center py-2 text-lg justify-center">
+        <span id="livesCounter" class="text-red-500 flex justify-center"></span>
+      </p>
+
+      <div class="flex flex-col flex-grow justify-center pb-4 items-center align-center">
+        <div
+          class="lg:w-[800px] w-full p-4 flex row justify-between mb-5"
+        >
+          <button
+            id="howToPlayButton"
+            class="w-full text-lg text-center px-4 mr-2 py-1.5 rounded bg-secondary text-dark"
+          >
             <i class="fa-solid fa-question-circle mr-4"></i>How to play
           </button>
 
-          <button class="w-full min-w-[50%] text-xl mx-auto text-center px-4 py-1.5 rounded-xl bg-primary" onclick="regenerateBoard()">
+          <button
+            class="w-full text-lg text-center px-4 ml-2 py-1.5 rounded bg-secondary text-dark"
+            onclick="regenerateBoard()"
+          >
             <i class="fa-solid fa-arrow-rotate-left mr-4"></i>New game
           </button>
         </div>
       </div>
     </div>
-
-    <!-- <hr />
-
-    <div
-      id="instructions"
-      class="container mx-auto my-5 p-4 text-center shadow rounded"
-    >
-      <h1>Instructions</h1>
-      <p>
-        This website supports using your mouse and keyboard to play the game.
-      </p>
-      <p>
-        Please find the tutorial
-        <a href="https://puzzlygame.com/pages/how_to_play_nonograms/">here</a>.
-      </p>
-      <br />
-      <table class="w-100 text-left rounded">
-        <thead>
-          <td>Shortcut</td>
-          <td>Description</td>
-        </thead>
-        <tr>
-          <td>Right mouse button</td>
-          <td>Used to comment out the selected tile.</td>
-        </tr>
-        <tr>
-          <td>ArrowKeys</td>
-          <td>Navigating and focussing the tiles in the grid.</td>
-        </tr>
-        <tr>
-          <td>Spacebar</td>
-          <td>Commenting the highlighted tile.</td>
-        </tr>
-        <tr>
-          <td>Enter</td>
-          <td>
-            Confirms the selection and reveals the contents below the tile.
-          </td>
-        </tr>
-      </table>
-    </div>
-    <p id="changelog" class="my-3 text-center">
-      Updates and commits can be found
-      <a href="https://github.com/kraibse/kraibse.github.io/commits/master"
-        >here</a
-      >.
-    </p> -->
   </body>
 
   <script
@@ -172,29 +136,95 @@
   <script>
     board.build();
 
-    $("#0_0").focus();
+    document.getElementById("0_0").focus();
 
-    $(window)
-      .$("div#board")
-      .click((e) => {
+    let tiles = document.querySelectorAll(".tile");
+    tiles.forEach((tile) => {
+      tile.addEventListener("click", (e) => {
         let x = board.keyboardHandler.posx;
         let y = board.keyboardHandler.posy;
-        $("#" + x + "_" + y).focus();
+
+        // console.log(`Clicked on ${x} and ${y}`);
+        board.keyboardHandler.focus(x, y);
+      });
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document
+      .getElementById("howToPlayButton")
+      .addEventListener("click", function () {
+        Swal.fire({
+          title: "Controls",
+          html: `
+                This website supports using your mouse and keyboard to play the game.
+                <br>
+                <br>
+
+                <div class="w-full text-start">
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">LMB</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Enter</span> to reveal the selected tile</p>
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">RMB</span> or <span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Space</span> to set a marker on the selected tile</p>
+                    <p class="mb-2"><span class="bg-gray-300 text-gray-700 font-mono px-1 rounded-md min-w-[6rem]">Arrows</span> or <i class="fa-solid fa-hand-pointer bg-gray-300 text-gray-700 p-1 rounded-md"></i> to navigate and select tiles in the grid</p>
+                </div>
+            `,
+
+          showCancelButton: true,
+          confirmButtonText: "Alright, let's play!",
+          cancelButtonText: "What are the rules?",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isDismissed && result.dismiss === "cancel") {
+            window.open("https://puzzlygame.com/pages/how_to_play_nonograms/", "_blank");
+          }
+        });
       });
   </script>
 
-    <script>
-        function regenerateBoard() {
-            var gameContainer = document.getElementById('board');
-
-            while (gameContainer.firstChild) {
-                gameContainer.removeChild(gameContainer.firstChild);
-            }
-
-            board.reset();
-            board.build();
+  <script>
+    function showWinMessage() {
+      Swal.fire({
+        icon: "success",
+        title: "Congratulations!",
+        html: `
+                You won this round of the game.
+            `,
+        confirmButtonText: "Next round!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          regenerateBoard();
         }
-    </script>
+      });
+    }
+
+    function showLoseMessage() {
+      Swal.fire({
+        icon: "error",
+        title: "Game over!",
+        html: `
+                You did not win this time. Better luck next time.
+            `,
+        confirmButtonText: "Next round!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          regenerateBoard();
+        }
+      });
+    }
+  </script>
+
+  <script>
+    function regenerateBoard() {
+      var gameContainer = document.getElementById("board");
+
+      while (gameContainer.firstChild) {
+        gameContainer.removeChild(gameContainer.firstChild);
+      }
+
+      board.reset();
+      board.build();
+    }
+  </script>
 
   <!-- <script src="nonogram.js"></script> -->
 </html>
