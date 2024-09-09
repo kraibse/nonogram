@@ -1,24 +1,26 @@
+const FLAG_TILE_TEXT = '<i class="fa-solid fa-flag"></i>';
+
+const FLAG_TILE = document.createElement('i');
+FLAG_TILE.classList.add('fa-solid', 'fa-flag', 'text-dark');
+
+const FLAG_TILE_BG = "#ffbe70";
+
+
 class Board
 {
-    grid = [];
-    revealedTiles = [];
-    indicators = [[], []];
-    
     size = 10;
-    lives = 3;
-    totalPoints = 0;
-    points = 0;
-    
-    isCommenting = false;
-    isUserCommenting = true;
     
     constructor(_size) {
         this.size = _size;
+
+        this.reset();
         
         this._generateGrid();
         this._generateIndicators();
         
         $("#0_0").focus();
+        this.livesCounter = document.getElementById('livesCounter');
+
         this.keyboardHandler = new KeyboardHandler(this);
     }
     
@@ -29,7 +31,7 @@ class Board
      * @param {number} y The y-coordinate of the cell which is being filled.
      * @param {_mode} _mode A boolean indicating whether the fill is being done as a result of the user's action or not.
      */
-    _fill(x, y, _mode=false) {
+    revealAdjacentTiles(x, y, _mode=false) {
         // Calculate the sum of all the hints in the row
         var rowHints = this.indicators[1][y]
         .reduce((a, b) => a + b, 0);
@@ -70,7 +72,10 @@ class Board
                     this.reveal(i, y, false);
                 }
                 if (tileH.innerHTML == "?") {
-                    tileH.innerHTML = "!";
+                    tileH.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
+                    tileH.appendChild(FLAG_TILE);
+                    // tileH.innerHTML = "!";
+                    // tileH.setAttribute('style', 'background-color: #333; color: #bbb;');
                 }
             }
             if (colHints == pointsY) {
@@ -78,7 +83,10 @@ class Board
                     this.reveal(x, i, false);
                 }
                 if (tileV.innerHTML == "?") {
-                    tileV.innerHTML = "!";
+                    tileV.setAttribute('style', 'background-color: ' + FLAG_TILE_BG + ' !important;');
+                    tileV.appendChild(FLAG_TILE);
+                    // tileV.innerHTML = "!";
+                    // tileV.setAttribute('style', 'background-color: #333; color: #bbb;');
                 }
             }
         }
@@ -165,172 +173,225 @@ class Board
         return row;
     }
 
+
+    // https://poe.com/preview/EIx5PtjBqWOaWyWXepEW
     build() {
-        $("#livesCounter").html("❤️".repeat(this.lives));
-        var t = $("<table/>", {
-            //  fixing the focus conflict when switching between m/kb
-            mouseout: () => {
-                let id = document.activeElement.id;
-                board.keyboardHandler.posx = parseInt(id[0]);
-                board.keyboardHandler.posy = parseInt(id[2]);
-            }
-        });
+        this.updateLivesCounter();
+        document.documentElement.style.setProperty('--grid-size', this.size);
 
-        for (var y = -1; y < this.size; y++)
-        {
-            var tr = $("<tr/>");
-            
-            for (var x = -1; x < this.size; x++)
-            {
-                var td = $("<td/>");
+        this.container = document.getElementById('board');
+        // Add top-left empty cell
+        this.container.appendChild(this.createCell('indicator', ''));
 
-                // upper left corner
-                if (y == -1 && x == -1) {
-                    tr.append(td);
-                    continue;
-                }
-
-                if (y == -1 && x != -1) {
-                    // write col hints
-                    
-                    var hintlist = "";
-                    var p = $("<p/>", {"class": "verticalHints"});
-
-                    for (var i = 0; i < this.indicators[0][x].length; i++) {
-                        hintlist += this.indicators[0][x][i] + "<br/>";
-                    }
-                    p.html(hintlist);
-                    td.append(p);
-                }
-                else if (x == -1)
-                {
-                    // write row hints
-                    var hintlist = "";
-                    var p = $("<p/>");
-
-                    for (var i = 0; i < this.indicators[1][y].length; i++) {
-                        hintlist += this.indicators[1][y][i] + " ";
-                    }
-                    p.html(hintlist);
-                    td.append(p);
-                }
-                else {
-                    var btn = $("<button/>", {
-                        "class": "shadow tile btn btn-default",
-                        id: x+"_"+y,
-                        text: " ",
-
-                        // event.target on event https://stackoverflow.com/a/13252233
-                        click: (e) => {
-                            let eid = e.target.id;
-                            let _x = parseInt(eid[0]);
-                            let _y = parseInt(eid[2]);
-
-                            board.reveal(_x, _y);
-                        },
-                        contextmenu: (e) => {
-                            e.preventDefault();
-                            board.isCommenting = true;
-
-                            let eid = e.target.id;
-                            let _posx = parseInt(eid[0]);
-                            let _posy = parseInt(eid[2]);
-                            
-                            board.reveal(_posx, _posy, false);
-                            board.isCommenting = false;
-                        },
-                        mouseenter: (e) => {
-                            let eid = e.target.id;
-                            let _x = parseInt(eid[0]);
-                            let _y = parseInt(eid[2]);
-
-                            board.keyboardHandler.posx = _x;
-                            board.keyboardHandler.posy = _y;
-                            $(_x + "_" + _y).focus();
-                        }
-                    });
-
-                    td.append(btn);
-                }
-                tr.append(td);
-            }
-            t.append(tr);
+        // Add top indicators
+        for (let x = 0; x < this.size; x++) {
+            const indicator = this.indicators[0][x].join('<br>');
+            this.container.appendChild(this.createCell('vertical-hint-cell verticalHints', indicator));
         }
-        $("#board").append(t);
+
+        // Add rows
+        for (let y = 0; y < this.size; y++) {
+            // Add left indicator
+            const rowIndicator = this.indicators[1][y].join(' ');
+            this.container.appendChild(this.createCell('horizontal-hint-cell horizontalHints', rowIndicator));
+
+            // Add cells
+            for (let x = 0; x < this.size; x++) {
+                const cell = this.createCell('tile', '', `${x}_${y}`);
+                cell.addEventListener('click', (e) => this.handleCellClick(e, x, y));
+                cell.addEventListener('contextmenu', (e) => this.handleCellRightClick(e, x, y));
+                cell.addEventListener('mouseenter', () => this.handleCellHover(x, y));
+                // Add keydown event listener for Enter key
+                cell.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.handleCellClick(e, x, y);
+                    }
+                    if (e.key === 'Space') {
+                        this.handleCellRightClick(e, x, y);
+                    }
+                });
+                
+                // Make the cell focusable
+                cell.setAttribute('tabindex', '0');
+                this.container.appendChild(cell);
+            }
+        }
     }
 
-    reveal(x, y, _isFilling=false) {
-        if (this.lives == 0)
-        {
-            return; // GAME OVER
-        }
-    
-        var tile = document.getElementById(x + "_" + y);
-        var color = "#000";
-        var bg = "";
-    
-        if (this.isCommenting == false) {
-            var content = this.grid[y][x].toString();
-            if (tile.innerHTML != ' ') {
-                return;
-            }
-            
-            if (content == 0) {
-                document.getElementById('livesCounter').innerHTML = "❤️".repeat(--this.lives);
-                bg = "#ff726f";
-                color = bg;
-                content = '💣';
-                this.revealedTiles[y][x] = -1;
-            }
-            else {
-                this.points++;
-                bg = "#90EE90";
-                color = "#000";
-                content = "✔"
-                this.revealedTiles[y][x] = 1;
-            }
-        }
-        else
-        {
-            var comment_symbol = (this.isUserCommenting) ? '?' : '!';
-    
-            if (tile.innerHTML == comment_symbol && !_isFilling)
-            {
-                var content = " ";
-                bg = "";
-                this.revealedTiles[y][x] = 0;
-            }
-            else if (tile.innerHTML == " ")
-            {
-                var content = comment_symbol;
-                color = "#333";
-                bg = "#bbb";
-                this.revealedTiles[y][x] = 2;
-            }
-            else 
-            {
-                return;
-            }
-        }
-        
-        tile.setAttribute("style", "color: " + color + "; background-color: "+ bg);
-        tile.innerHTML = content;
-        
-        if (this.points == this.totalPoints)
-        {
-            var pgm = document.getElementById("postgameMessage");
-            pgm.innerHTML = "YOU WON!!";
-            pgm.setAttribute("style", "display: block; color: #0f0");
-        }
-        
-        if (this.lives == 0)
-        {
-            var pgm = document.getElementById("postgameMessage");
-            pgm.innerHTML = "GAME OVER";
-            pgm.setAttribute("style", "display: block; color: rgb(255, 204, 36)");
-        }
+    createCell(className, content, id = null) {
+        const cell = document.createElement(className === 'tile' ? 'button' : 'div');
+        cell.className = className;
+        cell.innerHTML = content;
+        if (id) cell.id = id;
+        return cell;
+    }
 
-        if (!_isFilling) { this._fill(x, y, this.isCommenting); }
+    updateLivesCounter() {
+        const livesCounter = document.getElementById('livesCounter');
+        livesCounter.innerHTML = '';
+
+        const heartIcon = document.createElement('i');
+        heartIcon.classList.add('fa-solid', 'fa-heart', 'px-1');
+
+        for (let i = 0; i < this.lives; i++) {
+            livesCounter.appendChild(heartIcon.cloneNode());
+        }
+    }
+
+    handleCellClick(e, x, y) {
+        console.log(`Cell clicked: ${x}, ${y}`);
+        // Implement your reveal logic here
+        this.reveal(x, y);
+    }
+
+    handleCellRightClick(e, x, y) {
+        e.preventDefault();
+        console.log(`Cell right-clicked: ${x}, ${y}`);
+        // Implement your comment logic here
+
+        this.isCommenting = true;
+        this.isUserCommenting = true;
+        this.reveal(x, y);
+        this.isUserCommenting = false;
+        this.isCommenting = false;
+    }
+
+    handleCellHover(x, y) {
+        // console.log(`Cell hovered: ${x}, ${y}`);
+        // Implement your hover logic here
+    }
+
+    reset() {
+        this.grid = [];
+        this.revealedTiles = [];
+        this.indicators = [[], []];
+        this.lives = 3;
+        this.totalPoints = 0;
+        this.points = 0;
+        this.isCommenting = false;
+        this.isUserCommenting = true;
+
+        this._generateGrid();
+        this._generateIndicators();
+    }
+
+    reveal(x, y, _isFilling = false) {
+        if (this.isGameOver()) return;
+    
+        const tile = document.getElementById(`${x}_${y}`);
+        if (this.isTileAlreadyRevealed(tile)) return;
+    
+        let content, color, backgroundColor;
+    
+        if (!this.isCommenting) {
+            ({ content, color, backgroundColor } = this.handleNormalReveal(x, y));
+        } else {
+            ({ content, color, backgroundColor } = this.handleCommentReveal(x, y, tile, _isFilling));
+        }
+    
+        if (content === null) return; // No change to tile
+    
+        this.updateTileAppearance(tile, content, color, backgroundColor);
+        this.checkGameStatus();
+    
+        if (!_isFilling) {
+            this.revealAdjacentTiles(x, y, this.isCommenting);
+        }
+    }
+    
+    isGameOver() {
+        return this.lives === 0;
+    }
+    
+    isTileAlreadyRevealed(tile) {
+        const allowedContents = ['', '?'];
+        return allowedContents.indexOf(tile.innerHTML.trim()) === -1;
+    }
+    
+    handleNormalReveal(x, y) {
+        const content = this.grid[y][x].toString();
+        console.log("Found content: ", content);
+    
+        if (content === '0') {
+            return this.handleBombReveal(x, y);
+        } else {
+            return this.handleCorrectReveal(x, y);
+        }
+    }
+    
+    handleBombReveal(x, y) {
+        this.lives--;
+        this.updateLivesCounter();
+        this.revealedTiles[y][x] = -1;
+        const bombTile = document.createElement('i');
+        bombTile.classList.add('fa-solid', 'fa-bomb', 'text-dark');
+        return { content: bombTile, color: '#ff726f', backgroundColor: '#ff726f' };
+    }
+    
+    handleCorrectReveal(x, y) {
+        this.points++;
+        this.revealedTiles[y][x] = 1;
+        const checkTile = document.createElement('i');
+        checkTile.classList.add('text-dark');
+        checkTile.innerHTML = '✔';
+        return { content: checkTile, color: '#000', backgroundColor: '#90EE90' };
+    }
+    
+    handleCommentReveal(x, y, tile, _isFilling) {
+        const commentSymbol = this.isUserCommenting ? '?' : '!';
+    
+        if (this.isCommentTile(tile, commentSymbol) && !_isFilling) {
+            this.revealedTiles[y][x] = 0;
+            return { content: '', color: '', backgroundColor: '' };
+        } else if (this.isUnmarkedTile(tile)) {
+            this.revealedTiles[y][x] = 2;
+            if (commentSymbol === '!') {
+                const flagTile = document.createElement('i');
+                flagTile.classList.add('fa-solid', 'fa-flag', 'text-dark');
+                return { content: flagTile, color: '#333', backgroundColor: FLAG_TILE_BG };
+            }
+            return { content: commentSymbol, color: '#333', backgroundColor: '#bbb' };
+        } else {
+            return { content: null }; // No change to tile
+        }
+    }
+    
+    isCommentTile(tile, commentSymbol) {
+        const isComment = tile.innerHTML === commentSymbol;
+        console.log("Is comment: ", isComment);
+        return isComment;
+    }
+    
+    isUnmarkedTile(tile) {
+        const innerHTML = tile.innerHTML.trim();
+        console.log("Is unmarked tile: ", innerHTML === '');
+        return innerHTML === '';
+    }
+    
+    updateTileAppearance(tile, content, color, backgroundColor) {
+        tile.style.color = color;
+        tile.style.backgroundColor = backgroundColor;
+
+        if (typeof(content) === 'string') {
+            tile.innerHTML = content;
+        } else {
+            tile.appendChild(content);
+        }
+    }
+    
+    checkGameStatus() {
+        if (this.points === this.totalPoints) {
+            this.displayPostgameMessage("YOU WON!!", "#0f0");
+        } else if (this.lives === 0) {
+            this.displayPostgameMessage("GAME OVER", "rgb(255, 204, 36)");
+        }
+    }
+    
+    displayPostgameMessage(message, color) {
+        const pgm = document.getElementById("postgameMessage");
+        pgm.innerHTML = message;
+        pgm.style.display = "block";
+        pgm.style.color = color;
     }
 }
 
