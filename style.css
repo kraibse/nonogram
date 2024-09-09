@@ -11,6 +11,18 @@
     :root {
         --cell-size: min(7vw, 7vh);
     }
+
+    .verticalHints {
+        font-size: 0.75rem;
+    }
+
+    .horizontalHints {
+        font-size: 0.75rem;
+    }
+
+    .tile {
+        font-size: 0.9rem !important;
+    }
 }
 
 body
@@ -94,6 +106,8 @@ body
     text-align: center;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    place-items: middle;
     justify-content: end;
 }
 
